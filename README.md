@@ -27,3 +27,5 @@ après avoir télécharger les drivers (silicone driver esp8266), branché l'esp
 et vérifier que le com spécifique au driver silicone soit présent dans tool>port (il s'aggit en général du 5)
 
 Il ne reste plus qu'a appuyer sur téléverser et ... Succès !
+
+![image](https://user-images.githubusercontent.com/22155045/94266397-61aaf000-ff3a-11ea-973e-4f32981e78de.png)
