@@ -3,21 +3,24 @@
 #include <WiFiClient.h>
 #include <Arduino_JSON.h>
 
-const char* ssid = "XXXX-fe90";
-const char* password = "Q9CGDVGCHVDU";
+//const char* ssid = "XXXX-fe90";
+//const char* password = "Q9CGDVGCHVDU";
+
+const char* ssid = "Xana";
+const char* password = "lyoko2468";
 
 //Your Domain name with URL path or IP address with path
-const char* serverName = "http://192.168.0.24:8080/getCarCommande";
+const char* serverName = "http://192.168.0.13:5000/getCarCommande";
 
 // the following variables are unsigned longs because the time, measured in
 // milliseconds, will quickly become a bigger number than can be stored in an int.
 unsigned long lastTime = 0;
 // Timer set to 10 minutes (600000)
-//unsigned long timerDelay = 600000;
+unsigned long timerDelay = 600000;
 // Set timer to 5 seconds (5000)
-unsigned long timerDelay = 5000;
+//unsigned long timerDelay = 5000;
 
-String sensorReadings;
+String commande;
 float sensorReadingsArr[3];
 
 /* define L298N or L293D motor control pins */
@@ -46,10 +49,10 @@ void setup() {
   
   WiFi.begin(ssid, password);
   Serial.println("Connecting");
- // while(WiFi.status() != WL_CONNECTED) {
- //   delay(500);
- //   Serial.print(".");
- // }
+  while(WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
   Serial.println("");
   Serial.print("Connected to WiFi network with IP Address: ");
   Serial.println(WiFi.localIP());
@@ -57,19 +60,15 @@ void setup() {
 }
 
 void loop() {
-  MotorForward();
-  TurnLeft();
-  TurnRight();
-  MotorBackward();
-  MotorStop();
+
   //Send an HTTP POST request every 10 minutes
   if ((millis() - lastTime) > timerDelay) {
     //Check WiFi connection status
     if(WiFi.status()== WL_CONNECTED){
               
-      sensorReadings = httpGETRequest(serverName);
-      Serial.println(sensorReadings);
-      JSONVar myObject = JSON.parse(sensorReadings);
+      commande = httpGETRequest(serverName);
+      Serial.println(commande);
+      JSONVar myObject = JSON.parse(commande);
   
       // JSON.typeof(jsonVar) can be used to get the type of the var
       if (JSON.typeof(myObject) == "undefined") {
@@ -81,21 +80,16 @@ void loop() {
       Serial.println(myObject);
     
       // myObject.keys() can be used to get an array of all the keys in the object
-      JSONVar keys = myObject.keys();
-    
-      for (int i = 0; i < keys.length(); i++) {
-        JSONVar value = myObject[keys[i]];
-        Serial.print(keys[i]);
-        Serial.print(" = ");
-        Serial.println(value);
-        sensorReadingsArr[i] = double(value);
-      }
-      Serial.print("1 = ");
-      Serial.println(sensorReadingsArr[0]);
-      Serial.print("2 = ");
-      Serial.println(sensorReadingsArr[1]);
-      Serial.print("3 = ");
-      Serial.println(sensorReadingsArr[2]);
+//      JSONVar keys = myObject.keys();
+//    
+  //    for (int i = 0; i < keys.length(); i++) {
+    //    JSONVar value = myObject[keys[i]];
+      //  Serial.print(keys[i]);
+        //Serial.print(" = ");
+        //Serial.println(value);
+        //sensorReadingsArr[i] = double(value);
+      //}
+ 
     }
     else {
       Serial.println("WiFi Disconnected");
