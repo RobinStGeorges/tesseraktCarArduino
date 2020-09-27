@@ -3,108 +3,177 @@
 #include <WiFiClient.h>
 #include <Arduino_JSON.h>
 
-//const char* ssid = "XXXX-fe90";
-//const char* password = "Q9CGDVGCHVDU";
+/* Definition des wifi */
 
-const char* ssid = "Xana";
-const char* password = "lyoko2468";
+const char* ssid = "kireta";
+const char* password = "mdpdepasse";
 
-//Your Domain name with URL path or IP address with path
-const char* serverName = "http://192.168.0.13:5000/getCarCommande";
+//const char* ssid = "Xana";
+//const char* password = "lyoko2468";
 
-// the following variables are unsigned longs because the time, measured in
-// milliseconds, will quickly become a bigger number than can be stored in an int.
+/* Definition de l'URL de l'api
+ *  pour savoir l'adresse IP, taper dans un terminal de la raspberry "ifconfig", et prendre la valeur dans Wlan0*/
+const char* serverName = "http://192.168.43.28:5000/getCarCommande";
+
+/*valeur du timer, defini le temps d'execution entre les requetes*/
 unsigned long lastTime = 0;
-// Timer set to 10 minutes (600000)
+// 6 minutes (600000)
 unsigned long timerDelay = 600000;
-// Set timer to 5 seconds (5000)
+// 5 seconds (5000)
 //unsigned long timerDelay = 5000;
 
+/* Definition des variables*/
+
 String commande;
-float sensorReadingsArr[3];
-
-/* define L298N or L293D motor control pins */
-int leftMotorForward = 2;     /* GPIO2(D4) -> IN3   */
-int rightMotorForward = 15;   /* GPIO15(D8) -> IN1  */
-int leftMotorBackward = 0;    /* GPIO0(D3) -> IN4   */
-int rightMotorBackward = 13;  /* GPIO13(D7) -> IN2  */
 
 
-/* define L298N or L293D enable pins */
-int rightMotorENB = 14; /* GPIO14(D5) -> Motor-A Enable */
-int leftMotorENB = 12;  /* GPIO12(D6) -> Motor-B Enable */
+int leftMotorForward = 2;     
+int rightMotorForward = 15;   
+int leftMotorBackward = 0;    
+int rightMotorBackward = 13;  
+int rightMotorENB = 14; /* active le moteur */
+int leftMotorENB = 12;  /*active le moteur */
+
+int isFirstTIme = 0; /* check si la requete a déjà eu lieu une fois */
 
 void setup() {
   Serial.begin(115200);
 
-    /* initialize motor control pins as output */
   pinMode(leftMotorForward, OUTPUT);
   pinMode(rightMotorForward, OUTPUT); 
   pinMode(leftMotorBackward, OUTPUT);  
   pinMode(rightMotorBackward, OUTPUT);
 
-  /* initialize motor enable pins as output */
   pinMode(leftMotorENB, OUTPUT); 
   pinMode(rightMotorENB, OUTPUT);
   
   WiFi.begin(ssid, password);
-  Serial.println("Connecting");
+  Serial.println("Connexion en cours ... ");
   while(WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
   Serial.println("");
-  Serial.print("Connected to WiFi network with IP Address: ");
+  Serial.print("Connecte au WIFI sur l'ip : ");
   Serial.println(WiFi.localIP());
  
 }
 
 void loop() {
 
-  //Send an HTTP POST request every 10 minutes
-  if ((millis() - lastTime) > timerDelay) {
-    //Check WiFi connection status
-    if(WiFi.status()== WL_CONNECTED){
-              
+  if (isFirstTIme == 0){
+    manageLoop();
+    isFirstTIme = 1;
+  }
+  else{
+    if((millis() - lastTime) > timerDelay){
+      manageLoop();
+    }
+  }
+}
+
+void manageLoop(){
+  String arrayCmd[3][3];
+  if(WiFi.status()== WL_CONNECTED){
       commande = httpGETRequest(serverName);
-      Serial.println(commande);
       JSONVar myObject = JSON.parse(commande);
-  
-      // JSON.typeof(jsonVar) can be used to get the type of the var
       if (JSON.typeof(myObject) == "undefined") {
-        Serial.println("Parsing input failed!");
+        Serial.println("Le JSON n'a pas ete correctement recupere ! ");
         return;
       }
-    
-      Serial.print("JSON object = ");
-      Serial.println(myObject);
-    
-      // myObject.keys() can be used to get an array of all the keys in the object
-//      JSONVar keys = myObject.keys();
-//    
-  //    for (int i = 0; i < keys.length(); i++) {
-    //    JSONVar value = myObject[keys[i]];
-      //  Serial.print(keys[i]);
-        //Serial.print(" = ");
-        //Serial.println(value);
-        //sensorReadingsArr[i] = double(value);
-      //}
- 
-    }
-    else {
-      Serial.println("WiFi Disconnected");
-    }
-    lastTime = millis();
+      
+      int cpt = 0;
+      int ctn = 1;
+      int x = 0;
+      int y = 0;
+      String val;
+
+      /*Definie les contour de la commande*/
+      arrayCmd[0][0]= "a";
+      arrayCmd[0][1]= "a";
+      arrayCmd[0][2]= "a";
+      arrayCmd[0][3]= "a";
+      arrayCmd[0][4]= "a";
+      
+      while(ctn > 0){
+        if(myObject[cpt]==null){
+          Serial.println("cpt is null");
+          ctn=0;
+        }
+        else{
+          /* Construit une matrice à partir de la requete*/
+          y=myObject[cpt][0];
+          x=myObject[cpt][1];
+          val=JSON.stringify(myObject[cpt][2]);
+          arrayCmd[x][y] = val;
+          cpt = cpt+1;
+        }
+      }
+      
+      x = 0;
+      y = 0;
+      ctn = 1;
+      
+      /***************************/
+      /* Lectures de la commande */
+      /***************************/
+      
+      while(ctn > 0){
+        Serial.println("reding cmd");
+        if(arrayCmd[x][y] == "\"AVANCER\""){
+          Serial.println("avancer");
+          if(arrayCmd[x+1][y] == "\"EGAL\""){
+            Serial.println("egal");
+            if(arrayCmd[x+2][y] == "\"UN\""){
+              Serial.println("un");
+              MotorForward();
+            }
+            if(arrayCmd[x+2][y] == "\"DEUX\""){
+              Serial.println("deux");
+              MotorForward();
+              MotorForward();
+            }
+            if(arrayCmd[x+2][y] == "\"TROIS\""){
+              Serial.println("trois");
+              MotorForward();
+              MotorForward();
+              MotorForward();
+            }
+          }
+          else{
+            Serial.println("error");
+            /* lumière rouge */
+          }
+        }
+        else if(arrayCmd[x][y] == "\"VIRAGEGAUCHE\""){
+          Serial.println("virage gauche");
+          TurnLeft();
+        }
+        else if(arrayCmd[x][y] == "\"VIRAGEDROITE\""){
+          Serial.println("virage gauche");
+          TurnRight();
+        }
+        /*Passe a la ligne suivante */
+        y = y+1;
+        /*S'il n'y a plus de commande*/
+        if(arrayCmd[0][y] == "a"){
+          ctn = 0;
+        }
+        
+      }
+      
   }
+  else {
+    Serial.println("WiFi deconecte");
+  }
+  lastTime = millis();
 }
 
 String httpGETRequest(const char* serverName) {
   HTTPClient http;
     
-  // Your IP address with path or Domain name with URL path 
   http.begin(serverName);
   
-  // Send HTTP POST request
   int httpResponseCode = http.GET();
   
   String payload = "{}"; 
@@ -185,3 +254,4 @@ void MotorStop(void)
   digitalWrite(rightMotorForward,LOW);
   digitalWrite(rightMotorBackward,LOW);
 }
+/*Rajoutez vos fonctions personalisées ici ! */
