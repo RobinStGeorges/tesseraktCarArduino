@@ -5,15 +5,15 @@
 
 /* Definition des wifi */
 
-const char* ssid = "kireta";
-const char* password = "mdpdepasse";
 
-//const char* ssid = "Xana";
-//const char* password = "lyoko2468";
+const char* ssid = "XXXX";
+const char* password = "XXXX";
 
 /* Definition de l'URL de l'api
- *  pour savoir l'adresse IP, taper dans un terminal de la raspberry "ifconfig", et prendre la valeur dans Wlan0*/
-const char* serverName = "http://192.168.43.28:5000/getCarCommande";
+ *  pour savoir l'adresse IP, taper dans un terminal de la raspberry "ifconfig", et prendre la valeur dans Wlan0
+
+/*const char* serverName = "http://XXX.XXX.XX.XXX:XXXX/getCarCommande";*/
+
 
 /*valeur du timer, defini le temps d'execution entre les requetes*/
 unsigned long lastTime = 0;
@@ -201,7 +201,7 @@ void MotorForward(void)
   digitalWrite(rightMotorForward,HIGH);
   digitalWrite(leftMotorBackward,LOW);
   digitalWrite(rightMotorBackward,LOW);
-  delay(1000);
+  delay(500);
   MotorStop();
   delay(1000);
 }
@@ -214,7 +214,7 @@ void MotorBackward(void)
   digitalWrite(rightMotorBackward,HIGH);
   digitalWrite(leftMotorForward,LOW);
   digitalWrite(rightMotorForward,LOW);
-  delay(1000);
+  delay(500);
   MotorStop();
   delay(1000);
 }
@@ -226,8 +226,8 @@ void TurnLeft(void)
   digitalWrite(leftMotorForward,LOW);
   digitalWrite(rightMotorForward,HIGH);
   digitalWrite(rightMotorBackward,LOW);
-  digitalWrite(leftMotorBackward,HIGH);  
-  delay(450);
+  digitalWrite(leftMotorBackward,LOW);  
+  delay(400);
   MotorStop();
   delay(1000);
 }
@@ -240,7 +240,7 @@ void TurnRight(void)
   digitalWrite(rightMotorForward,LOW);
   digitalWrite(rightMotorBackward,HIGH);
   digitalWrite(leftMotorBackward,LOW);
-  delay(450);
+  delay(150);
   MotorStop();
   delay(1000);
 }
